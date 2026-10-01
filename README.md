@@ -2,7 +2,9 @@
 
 ## 在线体验
 
-部署完成后可访问：https://oiha289.github.io/milk-tea-react/
+GitHub Pages 由 GitHub Actions 在每次推送到 `main` 后自动部署：
+
+https://oiha289.github.io/milk-tea-react/
 
 ## 立刻预览（无需安装）
 

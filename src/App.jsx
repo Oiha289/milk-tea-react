@@ -165,7 +165,7 @@ export default function App() {
     {screen === 'orders' && <StatusScreen type="orders" orders={orders} onHome={goHome} onCart={() => setScreen('cart')} onMenu={() => setScreen('menu')} />}
     {screen === 'profile' && <StatusScreen type="profile" orders={orders} onHome={goHome} onCart={() => setScreen('cart')} onMenu={() => setScreen('menu')} />}
     <nav className="bottom-nav" aria-label="主导航"><button className={screen === 'home' || screen === 'detail' ? 'active' : ''} onClick={() => nav('home')}><i>⌂</i><span>首页</span></button><button className={screen === 'menu' ? 'active' : ''} onClick={() => nav('menu')}><i>▣</i><span>点单</span></button><button className={screen === 'orders' ? 'active' : ''} onClick={() => nav('orders')}><i>▤</i><span>订单</span></button><button className={screen === 'profile' ? 'active' : ''} onClick={() => nav('profile')}><i>♙</i><span>我的</span></button></nav>
-  </section><aside className="prototype-note"><span>交互升级版</span><h2>从种草到下单</h2><p>支持定制温度、甜度和加料；购物袋能编辑、选择、撤销删除，并保留加购状态。</p><div className="state-list"><span>✓ 商品详情</span><span>✓ 个性化加购</span><span>✓ 购物袋结算</span></div><strong>购物袋 {cartQuantity} 件</strong></aside>
-  {cartSheetOpen && <CartSheet cart={cart} onClose={() => setCartSheetOpen(false)} onCart={() => { setCartSheetOpen(false); setScreen('cart'); }} />}
-  {notice && <div className="toast"><span>✓</span><p>{notice.message}</p>{notice.action && <button onClick={() => { notice.action.onClick(); setNotice(null); }}>{notice.action.label}</button>}</div>}</main>;
+    {cartSheetOpen && <CartSheet cart={cart} onClose={() => setCartSheetOpen(false)} onCart={() => { setCartSheetOpen(false); setScreen('cart'); }} />}
+    {notice && <div className="toast"><span>✓</span><p>{notice.message}</p>{notice.action && <button onClick={() => { notice.action.onClick(); setNotice(null); }}>{notice.action.label}</button>}</div>}
+  </section></main>;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import promoStrawberryMilkTea from '../assets/promo-strawberry-milk-tea.png';
 
 const categories = [
   { label: '奶茶', icon: '🧋' },
@@ -94,21 +95,42 @@ function CartScreen({ cart, onBack, onUpdateQuantity, onRemove, onCheckout }) {
     {cart.length === 0 ? <div className="empty-cart"><div>🧋</div><h2>购物袋还是空的</h2><p>去挑一杯适合现在的好心情吧。</p><button onClick={onBack}>去点单</button></div> : <><div className="delivery-tip"><i>⌖</i><div><b>浦东新区 · 世纪大道</b><span>预计 25 分钟送达</span></div><em>›</em></div><div className="cart-list">{cart.map((item) => <article className="cart-item" key={item.key}><button className={selected.has(item.key) ? 'check selected' : 'check'} onClick={() => toggle(item.key)} aria-label="选择商品">{selected.has(item.key) ? '✓' : ''}</button><div className={`cart-visual ${item.product.tone}`}>{item.product.emoji}</div><div className="cart-copy"><h3>{item.product.name}</h3><p>{item.config.temperature} · {item.config.sugar}{item.config.toppings.length ? ` · ${item.config.toppings.map((id) => toppings.find((top) => top.id === id)?.name).join('、')}` : ''}</p><div><strong>{money(linePrice(item))}</strong><Stepper compact value={item.quantity} onDecrease={() => item.quantity === 1 ? onRemove(item.key) : onUpdateQuantity(item.key, -1)} onIncrease={() => onUpdateQuantity(item.key, 1)} /></div></div><button className="remove" onClick={() => onRemove(item.key)} aria-label={`移除 ${item.product.name}`}>×</button></article>)}</div><div className="cart-summary"><button className={allSelected ? 'check selected' : 'check'} onClick={toggleAll}>{allSelected ? '✓' : ''}</button><button className="select-all" onClick={toggleAll}>全选</button><div className="cart-total"><small>合计</small><strong>{money(total)}</strong><span>已优惠 ¥0</span></div><button className="checkout" disabled={!selectedItems.length} onClick={() => onCheckout(selectedItems)}>去结算</button></div></>}</section>;
 }
 
+function CartSheet({ cart, onClose, onCart }) {
+  const total = cart.reduce((sum, item) => sum + linePrice(item) * item.quantity, 0);
+  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+  if (!cart.length) return null;
+  return <div className="cart-sheet-mask" role="presentation" onClick={onClose}>
+    <section className="cart-sheet" role="dialog" aria-modal="true" aria-label="已加入购物袋" onClick={(event) => event.stopPropagation()}>
+      <div className="sheet-handle" />
+      <div className="sheet-title"><div><small>已加入购物袋</small><h2>要现在结算吗？</h2></div><button onClick={onClose} aria-label="关闭购物袋提示">×</button></div>
+      <div className="sheet-items">{cart.slice(0, 3).map((item) => <div className="sheet-item" key={item.key}><span className={`sheet-visual ${item.product.tone}`}>{item.product.emoji}</span><div><b>{item.product.name}</b><small>{item.config.temperature} · {item.config.sugar}</small></div><strong>×{item.quantity}</strong></div>)}{cart.length > 3 && <p className="sheet-more">还有 {cart.length - 3} 种饮品已加入购物袋</p>}</div>
+      <div className="sheet-footer"><div><small>共 {count} 件，合计</small><strong>{money(total)}</strong></div><button onClick={onCart}>去结算</button></div>
+      <button className="continue-shopping" onClick={onClose}>继续加购</button>
+    </section>
+  </div>;
+}
+
 function Home({ selectedCategory, setSelectedCategory, search, setSearch, recommendation, onRefresh, cartQuantity, itemCount, onView, onQuickAdd, onCart, couponClaimed }) {
   const visibleProducts = useMemo(() => products.filter((product) => (selectedCategory === '全部' || product.category === selectedCategory) && `${product.name}${product.note}${product.category}`.includes(search.trim())), [selectedCategory, search]);
   const productQty = (id) => itemCount(id);
   const recommendedProduct = products.find((product) => product.id === recommendation.productId);
   return <section className="screen home-screen"><header className="topbar"><div className="location-row"><button className="location"><span>⌖</span>浦东新区 · 世纪大道 <b>⌄</b></button><button className="icon-button" aria-label="通知">♧</button></div><label className="search-box"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索奶茶、咖啡或门店" /><button onClick={() => setSearch('')} className={search ? 'clear-search show' : 'clear-search'}>×</button></label></header>
-    <section className="promo-banner"><div><span className="eyebrow">午后轻松喝</span><h1>第二杯半价</h1><button onClick={couponClaimed}>立即{couponClaimed ? '使用' : '领取'}</button></div><div className="drink-orb" aria-hidden="true">🧋</div></section>
+    <section className="promo-banner" style={{ backgroundImage: `linear-gradient(90deg, rgba(255, 226, 235, .95) 0%, rgba(255, 219, 230, .68) 48%, rgba(255, 207, 220, .08) 100%), url(${promoStrawberryMilkTea})` }}><div><span className="eyebrow">午后轻松喝</span><h1>第二杯半价</h1><button onClick={couponClaimed}>立即{couponClaimed ? '使用' : '领取'}</button></div></section>
     <section className="ai-card"><div className="ai-heading"><span className="ai-sparkle">✦</span><div><small>AI 今日推荐 · 基于你的口味偏好</small><h2>{recommendation.title}</h2></div><button className="refresh" onClick={onRefresh} aria-label="换一换推荐">↻</button></div><p>{recommendation.reason}</p><div className="tags">{recommendation.tags.map((tag) => <span key={tag}>{tag}</span>)}</div><button className="ai-add" onClick={() => onView(recommendedProduct)}>查看推荐饮品 <strong>{money(recommendedProduct.price)}</strong><i>›</i></button></section>
     <nav className="category-list" aria-label="饮品分类"><button className={selectedCategory === '全部' ? 'category active' : 'category'} onClick={() => setSelectedCategory('全部')}><i>✦</i><span>全部</span></button>{categories.map((category) => <button key={category.label} className={selectedCategory === category.label ? 'category active' : 'category'} onClick={() => setSelectedCategory(category.label)}><i>{category.icon}</i><span>{category.label}</span></button>)}</nav>
     <section className="recommendations"><div className="section-title"><div><small>{selectedCategory === '全部' ? '为你精选' : selectedCategory}</small><h2>{selectedCategory === '全部' ? '现在喝什么？' : `${selectedCategory}饮品`}</h2></div><button onClick={() => { setSelectedCategory('全部'); setSearch(''); }}>查看全部 ›</button></div><div className="product-grid">{visibleProducts.length ? visibleProducts.map((product) => <ProductCard key={product.id} product={product} quantity={productQty(product.id)} onView={onView} onQuickAdd={onQuickAdd} />) : <div className="empty"><span>⌕</span><b>没有找到相关饮品</b><p>试试“奶茶”或“果茶”</p><button onClick={() => setSearch('')}>清除搜索</button></div>}</div></section>
     {cartQuantity > 0 && <button className="floating-cart" onClick={onCart}><span className="floating-cart-icon">🧋<b>{cartQuantity}</b></span><div><small>已选 {cartQuantity} 件</small><strong>去购物袋</strong></div><em>›</em></button>}</section>;
 }
 
-function StatusScreen({ type, onHome, onCart }) {
-  const content = type === 'orders' ? { emoji: '📦', title: '还没有订单', text: '每一杯好喝，都从现在下单开始。', action: '去点单' } : { emoji: '🌷', title: '下午好，茶友', text: '已为你保存 3 个口味偏好，AI 会越懂你。', action: '查看购物袋' };
-  return <section className="screen status-screen"><Header onBack={onHome} title={type === 'orders' ? '订单' : '我的'} /><div className="status-content"><div>{content.emoji}</div><h2>{content.title}</h2><p>{content.text}</p><button onClick={type === 'orders' ? onHome : onCart}>{content.action}</button></div></section>;
+function MenuScreen({ selectedCategory, setSelectedCategory, search, setSearch, itemCount, onView, onQuickAdd }) {
+  const visibleProducts = useMemo(() => products.filter((product) => (selectedCategory === '全部' || product.category === selectedCategory) && `${product.name}${product.note}${product.category}`.includes(search.trim())), [selectedCategory, search]);
+  return <section className="screen menu-screen"><header className="menu-header"><small>茶时光点单</small><h1>选择你的这一杯</h1><p>支持个性化定制，点加号可快速加入购物袋。</p><label className="menu-search"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索饮品" /><button onClick={() => setSearch('')} className={search ? 'clear-search show' : 'clear-search'}>×</button></label></header><nav className="category-list menu-categories" aria-label="点单分类"><button className={selectedCategory === '全部' ? 'category active' : 'category'} onClick={() => setSelectedCategory('全部')}><i>✦</i><span>全部</span></button>{categories.map((category) => <button key={category.label} className={selectedCategory === category.label ? 'category active' : 'category'} onClick={() => setSelectedCategory(category.label)}><i>{category.icon}</i><span>{category.label}</span></button>)}</nav><section className="menu-products"><div className="section-title"><div><small>{selectedCategory === '全部' ? '全部饮品' : selectedCategory}</small><h2>{visibleProducts.length} 款可选</h2></div></div><div className="product-grid">{visibleProducts.map((product) => <ProductCard key={product.id} product={product} quantity={itemCount(product.id)} onView={onView} onQuickAdd={onQuickAdd} />)}</div></section></section>;
+}
+
+function StatusScreen({ type, orders, onHome, onCart, onMenu }) {
+  if (type === 'orders' && orders.length) return <section className="screen status-screen orders-screen"><Header onBack={onHome} title="订单" /><div className="order-list"><p className="order-caption">最近订单</p>{orders.map((order) => <article className="order-card" key={order.id}><div><span>制作中</span><small>{order.time}</small></div><h2>茶时光 · 世纪大道店</h2><p>{order.count} 杯饮品 · 预计 {order.eta} 分钟送达</p><strong>{money(order.total)}</strong><button onClick={onCart}>查看购物袋</button></article>)}</div></section>;
+  const content = type === 'orders' ? { emoji: '📦', title: '还没有订单', text: '每一杯好喝，都从现在下单开始。', action: '去点单', onClick: onMenu } : { emoji: '🌷', title: '下午好，茶友', text: '已为你保存 3 个口味偏好，AI 会越懂你。', action: '查看购物袋', onClick: onCart };
+  return <section className="screen status-screen"><Header onBack={onHome} title={type === 'orders' ? '订单' : '我的'} /><div className="status-content"><div>{content.emoji}</div><h2>{content.title}</h2><p>{content.text}</p><button onClick={content.onClick}>{content.action}</button></div></section>;
 }
 
 export default function App() {
@@ -118,28 +140,33 @@ export default function App() {
   const [recommendationIndex, setRecommendationIndex] = useState(0);
   const [detailProduct, setDetailProduct] = useState(null);
   const [cart, setCart] = useState(() => { try { return JSON.parse(window.localStorage.getItem('tea-cart')) || []; } catch { return []; } });
+  const [orders, setOrders] = useState(() => { try { return JSON.parse(window.localStorage.getItem('tea-orders')) || []; } catch { return []; } });
   const [notice, setNotice] = useState(null);
   const [coupon, setCoupon] = useState(false);
+  const [cartSheetOpen, setCartSheetOpen] = useState(false);
 
   useEffect(() => window.localStorage.setItem('tea-cart', JSON.stringify(cart)), [cart]);
+  useEffect(() => window.localStorage.setItem('tea-orders', JSON.stringify(orders)), [orders]);
   const cartQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
   const showNotice = (message, action) => { setNotice({ message, action }); window.setTimeout(() => setNotice(null), 2600); };
   const openDetail = (product) => { setDetailProduct(product); setScreen('detail'); };
-  const addToCart = (product, config = defaultConfig(product), quantity = 1) => { const key = configKey(product, config); setCart((items) => { const existing = items.find((item) => item.key === key); return existing ? items.map((item) => item.key === key ? { ...item, quantity: item.quantity + quantity } : item) : [...items, { key, product, config, quantity }]; }); showNotice(`${product.name} 已加入购物袋`, { label: '查看', onClick: () => setScreen('cart') }); };
+  const addToCart = (product, config = defaultConfig(product), quantity = 1, showSheet = false) => { const key = configKey(product, config); setCart((items) => { const existing = items.find((item) => item.key === key); return existing ? items.map((item) => item.key === key ? { ...item, quantity: item.quantity + quantity } : item) : [...items, { key, product, config, quantity }]; }); if (showSheet) setCartSheetOpen(true); showNotice(`${product.name} 已加入购物袋`, { label: '查看', onClick: () => setScreen('cart') }); };
   const updateQuantity = (key, change) => setCart((items) => items.map((item) => item.key === key ? { ...item, quantity: item.quantity + change } : item));
   const removeItem = (key) => { const item = cart.find((cartItem) => cartItem.key === key); setCart((items) => items.filter((cartItem) => cartItem.key !== key)); if (item) showNotice(`已移除 ${item.product.name}`, { label: '撤销', onClick: () => setCart((items) => [...items, item]) }); };
-  const handleCheckout = (items) => { const count = items.reduce((sum, item) => sum + item.quantity, 0); const keys = new Set(items.map((item) => item.key)); setCart((current) => current.filter((item) => !keys.has(item.key))); setScreen('home'); showNotice(`已提交 ${count} 杯饮品，预计 25 分钟送达`); };
+  const handleCheckout = (items) => { const count = items.reduce((sum, item) => sum + item.quantity, 0); const total = items.reduce((sum, item) => sum + linePrice(item) * item.quantity, 0); const keys = new Set(items.map((item) => item.key)); setCart((current) => current.filter((item) => !keys.has(item.key))); setOrders((current) => [{ id: `order-${Date.now()}`, count, total, time: '刚刚下单', eta: 25 }, ...current]); setScreen('orders'); showNotice(`已提交 ${count} 杯饮品，预计 25 分钟送达`); };
   const itemCount = (productId) => cart.filter((item) => item.product.id === productId).reduce((sum, item) => sum + item.quantity, 0);
   const goHome = () => { setScreen('home'); setDetailProduct(null); };
-  const nav = (next) => { if (next === 'home') goHome(); else if (next === 'cart') setScreen('cart'); else setScreen(next); };
+  const nav = (next) => { setCartSheetOpen(false); if (next === 'home') goHome(); else setScreen(next); };
 
   return <main className="page-shell"><section className="phone" aria-label="茶时光奶茶外卖应用原型">
-    {screen === 'home' && <Home selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} search={search} setSearch={setSearch} recommendation={aiRecommendations[recommendationIndex]} onRefresh={() => { setRecommendationIndex((index) => (index + 1) % aiRecommendations.length); showNotice('已按你的口味偏好更新推荐'); }} cartQuantity={cartQuantity} itemCount={itemCount} onView={openDetail} onQuickAdd={addToCart} onCart={() => setScreen('cart')} couponClaimed={() => { setCoupon((value) => !value); showNotice(coupon ? '已切换至优惠使用说明' : '优惠券已放入卡包'); }} />}
-    {screen === 'detail' && <ProductDetail product={detailProduct} cartQuantity={cartQuantity} onBack={goHome} onAdd={(product, config, quantity) => { addToCart(product, config, quantity); setScreen('home'); }} onCart={() => setScreen('cart')} />}
+    {screen === 'home' && <Home selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} search={search} setSearch={setSearch} recommendation={aiRecommendations[recommendationIndex]} onRefresh={() => { setRecommendationIndex((index) => (index + 1) % aiRecommendations.length); showNotice('已按你的口味偏好更新推荐'); }} cartQuantity={cartQuantity} itemCount={itemCount} onView={openDetail} onQuickAdd={(product) => addToCart(product, defaultConfig(product), 1, true)} onCart={() => setScreen('cart')} couponClaimed={() => { setCoupon((value) => !value); showNotice(coupon ? '已切换至优惠使用说明' : '优惠券已放入卡包'); }} />}
+    {screen === 'menu' && <MenuScreen selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} search={search} setSearch={setSearch} itemCount={itemCount} onView={openDetail} onQuickAdd={(product) => addToCart(product, defaultConfig(product), 1, true)} />}
+    {screen === 'detail' && <ProductDetail product={detailProduct} cartQuantity={cartQuantity} onBack={goHome} onAdd={(product, config, quantity) => { addToCart(product, config, quantity, true); setScreen('home'); }} onCart={() => setScreen('cart')} />}
     {screen === 'cart' && <CartScreen cart={cart} onBack={goHome} onUpdateQuantity={updateQuantity} onRemove={removeItem} onCheckout={handleCheckout} />}
-    {screen === 'orders' && <StatusScreen type="orders" onHome={goHome} onCart={() => setScreen('cart')} />}
-    {screen === 'profile' && <StatusScreen type="profile" onHome={goHome} onCart={() => setScreen('cart')} />}
-    <nav className="bottom-nav" aria-label="主导航"><button className={screen === 'home' || screen === 'detail' ? 'active' : ''} onClick={() => nav('home')}><i>⌂</i><span>首页</span></button><button className={screen === 'home' ? '' : ''} onClick={() => nav('home')}><i>▣</i><span>点单</span></button><button className={screen === 'orders' ? 'active' : ''} onClick={() => nav('orders')}><i>▤</i><span>订单</span></button><button className={screen === 'profile' ? 'active' : ''} onClick={() => nav('profile')}><i>♙</i><span>我的</span></button></nav>
+    {screen === 'orders' && <StatusScreen type="orders" orders={orders} onHome={goHome} onCart={() => setScreen('cart')} onMenu={() => setScreen('menu')} />}
+    {screen === 'profile' && <StatusScreen type="profile" orders={orders} onHome={goHome} onCart={() => setScreen('cart')} onMenu={() => setScreen('menu')} />}
+    <nav className="bottom-nav" aria-label="主导航"><button className={screen === 'home' || screen === 'detail' ? 'active' : ''} onClick={() => nav('home')}><i>⌂</i><span>首页</span></button><button className={screen === 'menu' ? 'active' : ''} onClick={() => nav('menu')}><i>▣</i><span>点单</span></button><button className={screen === 'orders' ? 'active' : ''} onClick={() => nav('orders')}><i>▤</i><span>订单</span></button><button className={screen === 'profile' ? 'active' : ''} onClick={() => nav('profile')}><i>♙</i><span>我的</span></button></nav>
   </section><aside className="prototype-note"><span>交互升级版</span><h2>从种草到下单</h2><p>支持定制温度、甜度和加料；购物袋能编辑、选择、撤销删除，并保留加购状态。</p><div className="state-list"><span>✓ 商品详情</span><span>✓ 个性化加购</span><span>✓ 购物袋结算</span></div><strong>购物袋 {cartQuantity} 件</strong></aside>
+  {cartSheetOpen && <CartSheet cart={cart} onClose={() => setCartSheetOpen(false)} onCart={() => { setCartSheetOpen(false); setScreen('cart'); }} />}
   {notice && <div className="toast"><span>✓</span><p>{notice.message}</p>{notice.action && <button onClick={() => { notice.action.onClick(); setNotice(null); }}>{notice.action.label}</button>}</div>}</main>;
 }
